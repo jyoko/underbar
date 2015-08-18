@@ -5,6 +5,7 @@
 
   // Returns whatever value is passed as the argument.
   _.identity = function(val) {
+    return val;
   };
 
   /**
@@ -26,11 +27,21 @@
   // Like first, but for the last elements. If n is undefined, return just the
   // last element.
   _.last = function(array, n) {
+    return n === undefined ? array[array.length - 1] : array.slice(Math.max(0, array.length - n), array.length);
   };
 
   // Call iterator(value, key, collection) for each element of collection.
   // Accepts both arrays and objects.
   _.each = function(collection, iterator) {
+    if ( Array.isArray(collection) ) {
+      for (var i=0,len=collection.length; i<len; i++) {
+        iterator(collection[i],i,collection);
+      }
+    } else {
+      for (var key in collection) {
+        iterator(collection[key],key,collection);
+      }
+    }
   };
 
   // Returns the index at which value can be found in the array, or -1 if value
@@ -49,19 +60,50 @@
 
   // Return all elements of an array that pass a truth test.
   _.filter = function(collection, test) {
+    var isArray = Array.isArray(collection);
+    if (isArray) {
+      var result = [];
+    } else {
+      var result = {};
+    }
+    _.each(collection, function(value,key) {
+      if (test(value)) {
+        if (isArray) {
+          result.push(value);
+        } else {
+          result[key] = value;
+        }
+      }
+    });
+    return result;
   };
 
   // Return all elements of an array that don't pass a truth test.
   _.reject = function(collection, test) {
+    return _.filter(collection, function(value, key) {
+      return (!test(value));
+    });
   };
 
   // Produce a duplicate-free version of the array.
   _.uniq = function(array) {
+    var result = [];
+    _.each(array, function(val) {
+      if (_.indexOf(result, val) === -1) {
+        result.push(val);
+      }
+    });
+    return result;
   };
 
 
   // Return the results of applying an iterator to each element.
   _.map = function(collection, iterator) {
+    var result = (Array.isArray(collection))?[]:{};
+    _.each(collection, function(val,key) {
+      result[key] = iterator(val);
+    });
+    return result;
   };
 
   // Takes an array of objects and returns and array of the values of
