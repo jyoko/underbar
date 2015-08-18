@@ -173,11 +173,25 @@
   // Extend a given object with all the properties of the passed in
   // object(s).
   _.extend = function(obj) {
+    _.each([].slice.apply(arguments,[1]), function(object) {
+      _.each(object, function(val,key) {
+        obj[key] = val;
+      })
+    })
+    return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    _.each([].slice.apply(arguments,[1]), function(object) {
+      _.each(object, function(val,key) {
+        if (!obj.hasOwnProperty(key)) {
+          obj[key] = val;
+        }
+      })
+    })
+    return obj;
   };
 
 
