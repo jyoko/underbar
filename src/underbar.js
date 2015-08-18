@@ -117,6 +117,19 @@
   // Reduces an array or object to a single value by repetitively calling
   // iterator(accumulator, item) for each item.
   _.reduce = function(collection, iterator, accumulator) {
+    var first = true;
+    if (typeof accumulator !== 'undefined') {
+      first = false;
+    }
+    _.each(collection, function(value) {
+      if ( first ) {
+        accumulator = value;
+        first = false;
+      } else {
+        accumulator = iterator(accumulator,value);
+      }
+    });
+    return accumulator;
   };
 
   // Determine if the array or object contains a given value.
@@ -132,10 +145,21 @@
 
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
+    var iterator = iterator || _.identity;
+    return _.reduce(collection, function(acc,val) {
+      if ( acc ) {
+        acc = iterator(val);
+      }
+      return !!acc;
+    },true);
   };
 
   // Determine whether any of the elements pass a truth test.
   _.some = function(collection, iterator) {
+    var iterator = iterator || _.identity;
+    return !_.every(collection, function(val) {
+      return !iterator(val);
+    });
   };
 
 
