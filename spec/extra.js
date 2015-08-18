@@ -119,17 +119,19 @@
       var callback;
 
       beforeEach(function() {
-        callback = sinon.spy();
+        callback = sinon.spy(); // function(num) {console.log(num);} // to see which func is called
       });
 
       it('should return a function callable twice in the first 200ms', function() {
-        var fn = _.throttle(callback, 100);
-        fn(); // called
-        setTimeout(fn, 50);
-        setTimeout(fn, 100); // called
-        setTimeout(fn, 150);
-        setTimeout(fn, 199);
-        clock.tick(200);
+        var fn = _.throttle(callback, 1000);
+        fn(1); // called
+        setTimeout(fn.bind(null,2), 500);
+        setTimeout(fn.bind(null,3), 1000); // called
+        setTimeout(fn.bind(null,4), 1500);
+        setTimeout(fn.bind(null,5), 1990);
+        clock.tick(2000);
+        // above marks expected calls by test, real throttle will trigger 2 also:
+        // 1 at time=0, 2 at time=1000, 3 at time=2000 (clock tick)
 
         expect(callback).to.have.been.calledTwice;
       });
