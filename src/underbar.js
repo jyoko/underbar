@@ -101,7 +101,7 @@
   _.map = function(collection, iterator) {
     var result = (Array.isArray(collection))?[]:{};
     _.each(collection, function(val,key) {
-      result[key] = iterator(val);
+      result[key] = iterator(val, key);
     });
     return result;
   };
@@ -255,10 +255,10 @@
 
   // Randomizes the order of an array's contents.
   _.shuffle = function(array) {
-  var copy = array.slice();
-  var len = array.length;
-  var temp;
-  for (var i = 0; i < len; i++) {
+    var copy = array.slice();
+    var len = array.length;
+    var temp;
+    for (var i = 0; i < len; i++) {
       var rand = Math.floor(Math.random() * len);
       temp = copy[i];
       copy[i] = copy[rand];
@@ -280,33 +280,102 @@
 
   // Calls the method named by functionOrKey on each value in the list.
   _.invoke = function(collection, functionOrKey, args) {
-};
+    args = Array.isArray(args) ? args : [];
+    var isMethod = typeof functionOrKey==='string'?true:false;
+    return _.map(collection, function(val) {
+      var func = isMethod ? val[functionOrKey] : functionOrKey;
+      return typeof func==='function'?func.apply(val,args):func;
+    });
+  };
 
-// Sort the object's values by a criterion produced by an iterator.
+  // Sort the object's values by a criterion produced by an iterator.
   // If iterator is a string, sort objects by that property with the name
   // of that string. 
   _.sortBy = function(collection, iterator) {
+    var isStr = typeof iterator === 'string';
+    return _.pluck(_.map(collection, function(val,index) {
+      return {
+        val: val,
+        index: index
+      }
+    }).sort(function(l,r) {
+      var a = isStr ? l.val[iterator] : iterator(l.val,l.index);
+      var b = isStr ? r.val[iterator] : iterator(r.val,r.index);
+      if (a!==b) {
+        if (a > b || a === undefined) return 1;
+        if (a < b || b === undefined) return -1;
+      }
+      return l.index - r.index;
+    }), 'val');
   };
 
   // Zip together two or more arrays with elements of the same index
   // going together.
   _.zip = function() {
+    var args = [].slice.apply(arguments)
+    var len = args.length;
+    var longest = _.reduce(args, function(max,cur) {
+      if (!Array.isArray(cur)) throw new TypeError('Argument to zip not an Array');
+      return max>cur.length?max:cur.length;
+    },0);
+    var ret = [];
+    for (var i=0; i<longest; i++) {
+      ret.push([]);
+      for (var j=0; j<len; j++) {
+        ret[i].push(args[j][i]);
+      }
+    }
+    return ret;
   };
 
   // Takes a multidimensional array and converts it to a one-dimensional array.
   // The new array should contain all elements of the multidimensional array.
   // If given a truthy value for shallow, only flatten one layer
   _.flatten = function(nestedArray, shallow) {
+    return _.reduce(nestedArray, function(flat, val) {
+      if (Array.isArray(val)) {
+        flat = flat.concat(shallow ? val : _.flatten(val));
+      } else {
+        flat.push(val);
+      }
+      return flat;
+    },[]);
   };
 
   // Takes an arbitrary number of arrays and produces an array that contains
   // every item shared between all the passed-in arrays.
   _.intersection = function() {
+    var args = [].slice.apply(arguments);
+    var argsLen = args.length;
+    var len = args[0].length;
+    var el, ret = [];
+    for (var i=0; i<len; i++) {
+      el = args[0][i];
+      if (_.contains(ret,el)) continue;
+      for (var j=1; j<argsLen; j++) {
+        if (!_.contains(args[j], el)) break;
+      }
+      if (j === argsLen) ret.push(el);
+    }
+    return ret;
   };
 
   // Take the difference between one array and a number of other arrays.
   // Only the elements present in just the first array will remain.
   _.difference = function(array) {
+    var args = [].slice.call(arguments,1);
+    var len = array.length;
+    var argsLen = args.length;
+    var el,ret = [];
+    for (var i=0; i<len; i++) {
+      el = array[i];
+      if (_.contains(ret,el)) continue;
+      for (var j=0;j<argsLen;j++) {
+        if (_.contains(args[j], el)) break;
+      }
+      if (j === argsLen) ret.push(el);
+    }
+    return ret;
   };
 
   // Returns a function, that, when invoked, will only be triggered at most once
